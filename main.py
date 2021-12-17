@@ -18,7 +18,7 @@ cache_collection = mongo_database['cache']
 app = FastAPI()
 
 class Key(BaseModel):
-    key: str()
+    key: str
 
 @app.get('/')
 def get():
@@ -61,4 +61,4 @@ def read(body: Key):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="54.226.75.215", port=8000)
