@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from pymongo import MongoClient, mongo_client
 import pandas as pd
+import uvicorn
 
 from lambda_function import create_tfidf_features, calculate_similarity, show_similar_documents, preprocess
 
@@ -57,3 +58,7 @@ def read(body: Key):
         "Success": True,
         "data": "db_data"
     }
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=80)
