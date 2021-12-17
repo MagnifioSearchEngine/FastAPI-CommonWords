@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from pymongo import MongoClient, mongo_client
+from pymongo import MongoClient
 import pandas as pd
 import uvicorn
 
@@ -61,4 +61,4 @@ def read(body: Key):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="54.226.75.215", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=80)
