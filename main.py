@@ -18,7 +18,7 @@ cache_collection = mongo_database['cache']
 app = FastAPI()
 
 class Key(BaseModel):
-    key: str
+    key: str()
 
 @app.get('/')
 def get():
