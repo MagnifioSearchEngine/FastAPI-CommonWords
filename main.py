@@ -9,16 +9,15 @@ from lambda_function import create_tfidf_features, calculate_similarity, show_si
 mongo_client = MongoClient(
     "mongodb+srv://Pranay:confidential@cluster0.2bumc.mongodb.net/commonwords?retryWrites=true&w=majority")
 
-mongo_database = mongo_client['upload_files']
-temp_collection = mongo_database['temp']
-files_collection = mongo_database['files']
-common_collection = mongo_database['common']
-cache_collection = mongo_database['cache']
+mongo_db = mongo_client['upload_files']
+files = mongo_db["files"]
+db_common = mongo_db["common"]
+cache_collection = mongo_db["cache"]
 
 app = FastAPI()
 
 class Key(BaseModel):
-    key: str
+    company: str
 
 @app.get('/')
 def get():
@@ -26,27 +25,35 @@ def get():
         "Success": True
     }
 
-@app.post('/')
-def read(body: Key):
-    db_temp = temp_collection.find_one({ "key": body.key }, { "_id": 0 })
-    db_file = files_collection.find({ "company": body.key }, { "_id": 0 })
-    db_common = common_collection.find_one({ "key": body.key }, { "_id": 0 })
 
-    data_frame = pd.DataFrame(list(db_file))
-    print(type(db_temp['data'][0]))
+
+@app.post('/common')
+def read(body: Key):
+    print(body)
+
+    tempList = list(files.find({"company": body.company}))
+    common = db_common.find_one({"company": body.company})
+
+    if tempList is None or not tempList or common is None:
+        return {
+            "Success": False,
+            "Error": "Files not found in DB!"
+        }
+
+    df = pd.DataFrame(tempList)
 
     data = [preprocess(title, content)
-     for title, content in zip([""]*len(data_frame["text"]), data_frame['text'])]
+            for title, content in zip([""]*len(df["text"]), df['text'])]
 
-    X, v = create_tfidf_features(db_temp['data'], data_frame)
+    X, v = create_tfidf_features(data, df)
 
-    for topic in db_common['common']:
+    for topic in common["common_words"]:
         user_question = [topic]
         sim_vecs, cosine_similarities = calculate_similarity(
             X, v, user_question)
         output = show_similar_documents(data, cosine_similarities, sim_vecs)
         newDict = {
-            "company": body.key,
+            "company": body.company,
             "keyword": topic,
             "search_results": output
         }
