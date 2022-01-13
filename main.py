@@ -18,6 +18,7 @@ app = FastAPI()
 
 class Key(BaseModel):
     company: str
+    topics: list
 
 @app.get('/')
 def get():
@@ -29,37 +30,25 @@ def get():
 
 @app.post('/common')
 def read(body: Key):
-    print(body)
+    
+    df = pd.DataFrame(list(files.find({"company": body.company})))
+    
 
-    tempList = list(files.find({"company": body.company}))
-    common = db_common.find_one({"company": body.company})
-
-    if tempList is None or not tempList or common is None:
-        return {
-            "Success": False,
-            "Error": "Files not found in DB!"
-        }
-
-    df = pd.DataFrame(tempList)
-
-    data = [preprocess(title, content)
-            for title, content in zip([""]*len(df["text"]), df['text'])]
-
-    X, v = create_tfidf_features(data, df)
-
-    for topic in common["common_words"]:
-        user_question = [topic]
-        sim_vecs, cosine_similarities = calculate_similarity(
-            X, v, user_question)
-        output = show_similar_documents(data, cosine_similarities, sim_vecs)
-        newDict = {
-            "company": body.company,
-            "keyword": topic,
-            "search_results": output
-        }
-        # print(newDict)
-
-        cache_collection.insert_one(newDict)
+    if df:
+        data = [preprocess(title, content) for title, content in zip([""]*len(df["text"]), df['text'])]
+        X,v = create_tfidf_features(data,df)
+        for topic in body.topics:
+                user_question = [topic]
+                sim_vecs, cosine_similarities = calculate_similarity(X,v, user_question)
+                output = show_similar_documents(data, cosine_similarities, sim_vecs)
+                newDict={
+                    "company":company,
+                    "keyword":topic,
+                    "search_results":output
+                    }
+                    
+                cache.insert_one(newDict)
+            return{"message:success"}
 
     return {
         "Success": True,
