@@ -6,13 +6,11 @@ import uvicorn
 
 from lambda_function import create_tfidf_features, calculate_similarity, show_similar_documents, preprocess
 
-mongo_client = MongoClient(
+client = MongoClient(
     "mongodb+srv://Pranay:confidential@cluster0.2bumc.mongodb.net/commonwords?retryWrites=true&w=majority")
-
-mongo_db = mongo_client['upload_files']
-files = mongo_db["files"]
-db_common = mongo_db["common"]
-cache_collection = mongo_db["cache"]
+db = client["upload_files"]
+files = db.files
+cache = db.cache
 
 app = FastAPI()
 
